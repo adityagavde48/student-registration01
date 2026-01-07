@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>University Portal - Dashboard</title>
+
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: Arial, sans-serif;
+}
+
+body {
+  display: flex;
+  height: 100vh;
+  background: #f4f6f9;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 240px;
+  background: #2f4f8f;
+  color: #fff;
+  padding: 20px 0;
+}
+
+.sidebar h2 {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.sidebar ul {
+  list-style: none;
+}
+
+.sidebar ul li {
+  padding: 12px 20px;
+  cursor: pointer;
+}
+
+.sidebar ul li.active,
+.sidebar ul li:hover {
+  background: rgba(255,255,255,0.2);
+}
+
+/* Main */
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Topbar */
+.topbar {
+  background: #fff;
+  padding: 15px 20px;
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px solid #ddd;
+}
+
+.logout-btn {
+  background: #e74c3c;
+  color: #fff;
+  border: none;
+  padding: 6px 12px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+/* Content */
+.content {
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.welcome {
+  background: #fff;
+  padding: 20px;
+  margin-bottom: 20px;
+  border-radius: 5px;
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit,minmax(200px,1fr));
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.card {
+  background: #fff;
+  padding: 20px;
+  border-radius: 5px;
+  text-align: center;
+}
+
+.table-box {
+  background: #fff;
+  padding: 20px;
+  border-radius: 5px;
+  margin-bottom: 20px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+th, td {
+  border: 1px solid #ddd;
+  padding: 10px;
+  text-align: center;
+}
+
+th {
+  background: #f1f1f1;
+}
+
+input {
+  padding: 6px;
+  margin: 5px;
+}
+
+button {
+  padding: 6px 10px;
+  cursor: pointer;
+}
+</style>
+</head>
+
+<body>
+
+<!-- Sidebar -->
+<div class="sidebar">
+  <h2>🎓 University Portal</h2>
+  <ul>
+    <li class="active">Dashboard</li>
+    <li>Courses</li>
+    <li>My Courses</li>
+    <li>Grades</li>
+  </ul>
+</div>
+
+<!-- Main -->
+<div class="main">
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <div>Welcome, <b>Student</b></div>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+  </div>
+
+  <!-- Content -->
+  <div class="content">
+
+    <div class="welcome">
+      <h2>Welcome Back</h2>
+      <p>Manual course registration & marks entry system</p>
+    </div>
+
+    <!-- Dashboard Cards -->
+    <div class="cards">
+      <div class="card">
+        <h3>Registered Courses</h3>
+        <p id="registeredCourses">0</p>
+      </div>
+      <div class="card">
+        <h3>Total Credits</h3>
+        <p id="totalCredits">0</p>
+      </div>
+      <div class="card">
+        <h3>Progress</h3>
+        <p id="progress">0%</p>
+      </div>
+    </div>
+
+    <!-- Add Course -->
+    <div class="table-box">
+      <h3>Add Course Manually</h3>
+      <input id="cCode" placeholder="Course Code">
+      <input id="cTitle" placeholder="Title">
+      <input id="cInstructor" placeholder="Instructor">
+      <input id="cCredits" type="number" placeholder="Credits">
+      <input id="cSeats" type="number" placeholder="Seats">
+      <br>
+      <button onclick="addCourse()">Add Course</button>
+    </div>
+
+    <!-- Available Courses -->
+    <div class="table-box">
+      <h3>Available Courses</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Code</th>
+            <th>Title</th>
+            <th>Instructor</th>
+            <th>Credits</th>
+            <th>Seats</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="courseTable"></tbody>
+      </table>
+    </div>
+
+    <!-- My Courses -->
+    <div class="table-box">
+      <h3>My Registered Courses</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Code</th>
+            <th>Title</th>
+            <th>Credits</th>
+            <th>Marks</th>
+          </tr>
+        </thead>
+        <tbody id="myCourseTable"></tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+<script>
+let courses = JSON.parse(localStorage.getItem("courses")) || [];
+let myCourses = JSON.parse(localStorage.getItem("myCourses")) || [];
+
+/* Add Course */
+function addCourse() {
+  if (!cCode.value || !cTitle.value) {
+    alert("Enter course details");
+    return;
+  }
+
+  courses.push({
+    id: Date.now(),
+    code: cCode.value,
+    title: cTitle.value,
+    instructor: cInstructor.value,
+    credits: Number(cCredits.value),
+    seats: cSeats.value
+  });
+
+  localStorage.setItem("courses", JSON.stringify(courses));
+  cCode.value = cTitle.value = cInstructor.value = cCredits.value = cSeats.value = "";
+  renderCourses();
+}
+
+/* Render Available Courses */
+function renderCourses() {
+  courseTable.innerHTML = "";
+  courses.forEach(c => {
+    courseTable.innerHTML += `
+      <tr>
+        <td>${c.code}</td>
+        <td>${c.title}</td>
+        <td>${c.instructor}</td>
+        <td>${c.credits}</td>
+        <td>${c.seats}</td>
+        <td>
+          <button onclick="registerCourse(${c.id})">Register</button>
+        </td>
+      </tr>
+    `;
+  });
+}
+
+/* Register Course */
+function registerCourse(id) {
+  const course = courses.find(c => c.id === id);
+  if (myCourses.find(m => m.id === id)) {
+    alert("Already Registered");
+    return;
+  }
+  myCourses.push({ ...course, marks: "" });
+  localStorage.setItem("myCourses", JSON.stringify(myCourses));
+  renderMyCourses();
+  updateStats();
+}
+
+/* Render My Courses */
+function renderMyCourses() {
+  myCourseTable.innerHTML = "";
+  myCourses.forEach((c, i) => {
+    myCourseTable.innerHTML += `
+      <tr>
+        <td>${c.code}</td>
+        <td>${c.title}</td>
+        <td>${c.credits}</td>
+        <td>
+          <input type="number" value="${c.marks}"
+            onchange="saveMarks(${i}, this.value)"
+            style="width:80px">
+        </td>
+      </tr>
+    `;
+  });
+}
+
+/* Save Marks */
+function saveMarks(index, value) {
+  myCourses[index].marks = value;
+  localStorage.setItem("myCourses", JSON.stringify(myCourses));
+}
+
+/* Dashboard Stats */
+function updateStats() {
+  registeredCourses.innerText = myCourses.length;
+  totalCredits.innerText = myCourses.reduce((s,c)=>s+c.credits,0);
+  progress.innerText = myCourses.length ? "50%" : "0%";
+}
+
+/* Logout */
+function logout() {
+  localStorage.clear();
+  location.reload();
+}
+
+/* Initial Load */
+renderCourses();
+renderMyCourses();
+updateStats();
+</script>
+
+</body>
+</html>
